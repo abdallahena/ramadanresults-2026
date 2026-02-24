@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نتائج مسابقة رمضان 2026</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+
+body{
+    margin:0;
+    font-family:'Cairo',sans-serif;
+    background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+    color:#fff;
+    text-align:center;
+}
+.container{
+    max-width:900px;
+    margin:30px auto;
+    padding:20px;
+}
+.card{
+    background:rgba(255,255,255,0.1);
+    border-radius:22px;
+    padding:25px;
+    margin-top:30px;
+    animation:fade 1.3s ease;
+}
+h1,h2,h3{text-align:center}
+input,button{
+    width:100%;
+    padding:14px;
+    margin-top:15px;
+    border:none;
+    border-radius:14px;
+    font-size:16px;
+}
+button{
+    background:#ffd166;
+    font-weight:bold;
+    cursor:pointer;
+}
+button:hover{background:#ffe08a}
+.hidden{display:none}
+.loader{
+    text-align:center;
+    font-size:24px;
+    animation:pulse 1.2s infinite;
+}
+table{
+    width:100%;
+    margin-top:20px;
+    border-collapse:collapse;
+}
+th,td{
+    padding:8px;
+    border-bottom:1px solid rgba(255,255,255,.2);
+    text-align:center;
+}
+th{
+    background:rgba(255,209,102,.8);
+    color:#000;
+}
+.badge{
+    background:#ffd166;
+    color:#000;
+    padding:8px 18px;
+    border-radius:20px;
+    display:inline-block;
+    margin:10px auto;
+    font-weight:bold;
+}
+@keyframes fade{
+    from{opacity:0;transform:translateY(25px)}
+    to{opacity:1}
+}
+@keyframes pulse{
+    0%{opacity:.3}
+    50%{opacity:1}
+    100%{opacity:.3}
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>🌙 نتائج مسابقة رمضان 2026 🌙</h1>
+
+<!-- تسجيل الدخول -->
+<div class="card" id="loginBox">
+    <h2>أدخل الرقم التعريفي</h2>
+    <input id="uid" placeholder="مثال: 1234">
+    <button onclick="login()">دخول</button>
+    <button onclick="openAdmin()">دخول الأدمن</button>
+    <p id="err" style="color:#ffb4b4"></p>
+</div>
+
+<!-- تحميل -->
+<div class="card hidden" id="loading">
+    <div class="loader">⏳ يتم تجهيز النتائج...</div>
+</div>
+
+<!-- صفحة اللاعب -->
+<div class="card hidden" id="resultBox">
+    <h2 id="name"></h2>
+    <div id="rank"></div>
+    <h3 id="total"></h3>
+    <p id="msg" style="font-size:18px"></p>
+
+    <table>
+        <thead>
+            <tr><th>اليوم</th><th>العلامة</th></tr>
+        </thead>
+        <tbody id="days"></tbody>
+    </table>
+
+    <button onclick="logout()">خروج</button>
+</div>
+
+<!-- صفحة الأدمن -->
+<div class="card hidden" id="adminBox">
+    <h2>🔐 لوحة الأدمن</h2>
+    <input id="adminPass" type="password" placeholder="كلمة سر الأدمن">
+    <button onclick="loginAdmin()">دخول</button>
+    <p id="adminErr" style="color:#ffb4b4"></p>
+
+    <div id="adminContent" class="hidden">
+        <table>
+            <thead>
+                <tr>
+                    <th>الاسم</th>
+                    <th>الرقم</th>
+                    <th colspan="30">نقاط الأيام</th>
+                    <th>المجموع</th>
+                </tr>
+            </thead>
+            <tbody id="adminTable"></tbody>
+        </table>
+        <button onclick="saveData()">💾 حفظ النتائج</button>
+        <button onclick="logout()">خروج</button>
+    </div>
+</div>
+
+</div>
+
+<script>
+const adminPassword="2026";
+
+const defaultPlayers=[
+ {name:"رينيه",id:4831,scores:Array(30).fill(0)},
+ {name:"لانا",id:9274,scores:Array(30).fill(0)},
+ {name:"اوزي",id:6158,scores:Array(30).fill(0)},
+ {name:"نور",id:3029,scores:Array(30).fill(0)},
+ {name:"فاتن",id:7642,scores:Array(30).fill(0)},
+ {name:"هناء",id:5901,scores:Array(30).fill(0)},
+ {name:"امين",id:8417,scores:Array(30).fill(0)}
+];
+
+let players=JSON.parse(localStorage.getItem("ramadan2026"))||defaultPlayers;
+let current=null;
+
+function saveData(){
+ localStorage.setItem("ramadan2026",JSON.stringify(players));
+ alert("تم حفظ النتائج بنجاح");
+}
+
+function login(){
+ const id=parseInt(uid.value);
+ const p=players.find(x=>x.id===id);
+ if(!p){err.innerText="الرقم غير صحيح";return;}
+ loginBox.classList.add("hidden");
+ loading.classList.remove("hidden");
+ setTimeout(()=>{
+   loading.classList.add("hidden");
+   resultBox.classList.remove("hidden");
+   current=p;
+   showPlayer();
+ },2000);
+}
+
+function showPlayer(){
+ name.innerText=current.name+" • "+current.id;
+ const sum=current.scores.reduce((a,b)=>a+b,0);
+ total.innerText=`مجموعك: ${sum} نقطة`;
+ msg.innerText="🌟 شكراً لمشاركتك، جهدك محل تقدير";
+
+ days.innerHTML="";
+ current.scores.forEach((s,i)=>{
+   days.innerHTML+=`<tr><td>${i+1}</td><td>${s}</td></tr>`;
+ });
+}
+
+function openAdmin(){
+ loginBox.classList.add("hidden");
+ adminBox.classList.remove("hidden");
+}
+
+function loginAdmin(){
+ if(adminPass.value!==adminPassword){
+   adminErr.innerText="كلمة السر غير صحيحة";
+   return;
+ }
+ adminContent.classList.remove("hidden");
+ renderAdmin();
+}
+
+function renderAdmin(){
+ adminTable.innerHTML="";
+ players.forEach((p,pi)=>{
+   let row=`<tr><td>${p.name}</td><td>${p.id}</td>`;
+   p.scores.forEach((s,si)=>{
+     row+=`<td><input type="number" value="${s}" style="width:45px"
+       onchange="players[${pi}].scores[${si}]=Number(this.value)"></td>`;
+   });
+   row+=`<td>${p.scores.reduce((a,b)=>a+b,0)}</td></tr>`;
+   adminTable.innerHTML+=row;
+ });
+}
+
+function logout(){
+ location.reload();
+}
+</script>
+
+<!-- 🔥 إضافة Firebase أونلاين في آخر الكود -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ضع بيانات مشروعك من Firebase هنا
+const firebaseConfig = {
+  apiKey: "PUT_API_KEY",
+  authDomain: "PUT_DOMAIN",
+  databaseURL: "PUT_DATABASE_URL",
+  projectId: "PUT_PROJECT_ID",
+  storageBucket: "PUT_BUCKET",
+  messagingSenderId: "PUT_ID",
+  appId: "PUT_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// تحميل البيانات أونلاين أول ما الصفحة تفتح
+async function loadOnlineData() {
+  try {
+    const snapshot = await get(ref(db, "ramadan2026/players"));
+    if (snapshot.exists()) {
+      players = snapshot.val();
+    }
+  } catch (e) {
+    console.log("خطأ في تحميل البيانات أونلاين:", e);
+  }
+}
+loadOnlineData();
+
+// دالة لحفظ النتائج أونلاين بدل localStorage
+async function saveOnlineData() {
+  try {
+    await set(ref(db, "ramadan2026/players"), players);
+    alert("تم حفظ النتائج أونلاين لجميع الأجهزة!");
+  } catch (e) {
+    alert("حدث خطأ أثناء الحفظ أونلاين");
+    console.log(e);
+  }
+}
+
+// تعديل دالة الحفظ الحالية لاستخدام الحفظ أونلاين
+saveData = saveOnlineData;
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ضع بيانات مشروعك من Firebase هنا
+const firebaseConfig = {
+  apiKey: "PUT_API_KEY",
+  authDomain: "PUT_DOMAIN",
+  databaseURL: "PUT_DATABASE_URL",
+  projectId: "PUT_PROJECT_ID",
+  storageBucket: "PUT_BUCKET",
+  messagingSenderId: "PUT_ID",
+  appId: "PUT_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let onlineLoaded = false;
+
+// تحميل البيانات أونلاين قبل أي استخدام
+async function loadOnlineData() {
+  try {
+    const snapshot = await get(ref(db, "ramadan2026/players"));
+    if (snapshot.exists()) {
+      players = snapshot.val(); // تحديث البيانات
+    }
+  } catch (e) {
+    console.log("خطأ في تحميل البيانات أونلاين:", e);
+  } finally {
+    onlineLoaded = true;
+  }
+}
+await loadOnlineData(); // مهم الانتظار قبل أي تفاعل
+
+// تعديل دالة login عشان تنتظر تحميل البيانات
+const originalLogin = login;
+login = function() {
+  if (!onlineLoaded) {
+    alert("⏳ الرجاء الانتظار حتى تحميل البيانات أونلاين");
+    return;
+  }
+  originalLogin();
+}
+
+// دالة لحفظ النتائج أونلاين بدل localStorage
+async function saveOnlineData() {
+  try {
+    await set(ref(db, "ramadan2026/players"), players);
+    alert("تم حفظ النتائج أونلاين لجميع الأجهزة!");
+  } catch (e) {
+    alert("حدث خطأ أثناء الحفظ أونلاين");
+    console.log(e);
+  }
+}
+
+// استبدال saveData بالدالة الأونلاين
+saveData = saveOnlineData;
+</script>
+</body>
+</html>
